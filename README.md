@@ -24,4 +24,10 @@ Typical usage:
         $ jgit branch main
     5. Clean up old worktrees whose branch no longer exists on remote
         $ jgit clean
+
+To uninstall jgit:
+    1. Run the uninstall script
+        $ sudo ./uninstall.sh
+    2. Remove the jgit directory you are currently inside of
+        $ rm -rf ../jgit
 ```
