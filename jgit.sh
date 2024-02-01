@@ -75,9 +75,9 @@ clean () {
 
     echo -e "\nWORKTREES TO DELETE"
     echo -n "    "
-    echo -e "$remove" | sed 's/ /\n    /'
+    echo -e "$remove" | sed 's/ /\n    /g'
 
-    echo -en "\nProceed? y/(n): "
+    echo -en "Proceed? y/(n): "
     read proceed
 
     if [ "$proceed" != "y" ]; then
