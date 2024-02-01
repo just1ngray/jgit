@@ -47,6 +47,7 @@ branch () {
     git checkout "$name"
     git branch --set-upstream-to=origin/"$name"
     git pull
+    git reset --hard origin/"$name"
 }
 
 # Delete local worktrees that do not have corresponding remote branches
