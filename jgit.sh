@@ -54,6 +54,11 @@ branch () {
 
 # Delete local worktrees that do not have corresponding remote branches
 clean () {
+    if [ ! -e .bare ]; then
+        echo "This command must be executed from your top-level worktree repository"
+        exit 1
+    fi
+
     git fetch --prune
 
     remote_branches=$(git branch --remotes | grep -Po "origin/\K.+")
@@ -69,6 +74,11 @@ clean () {
             keep+="$branch "
         fi
     done
+
+    if [ "$remove" = "" ]; then
+        echo "Nothing to delete. Every worktree branch exists on remote"
+        exit 0
+    fi
 
     echo -e "\nWORKTREES TO DELETE"
     echo -n "    "
