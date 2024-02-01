@@ -3,7 +3,7 @@
 ```
 JGit - Justin's simple git repository and worktree manager
 
-Usage: $0 {repo|branch|clean} [args]
+Usage: jgit {repo|branch|clean} [args]
 
     repo <name> <url>   Create a worktree repository
     branch <name>       Create a new worktree for the given branch
