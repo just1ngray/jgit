@@ -64,14 +64,10 @@ clean () {
     remote_branches=$(git branch --remotes | grep -Po "origin/\K.+")
     local_worktree_branches=$(git worktree list | grep -Po "\[.+\]$" | tr -d '[]')
 
-    keep=""
     remove=""
-
     for branch in $local_worktree_branches; do
         if ! echo "$remote_branches" | grep -q "^$branch$"; then
             remove+="$branch "
-        else
-            keep+="$branch "
         fi
     done
 
