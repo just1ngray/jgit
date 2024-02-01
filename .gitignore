@@ -3,5 +3,7 @@
 !README.md
 !jgit.sh
 !.gitignore
+!util.sh
 !install.sh
+!bash_completion.sh
 !uninstall.sh

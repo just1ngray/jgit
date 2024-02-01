@@ -1,16 +1,14 @@
 #!/bin/bash
 
-binpath="/usr/local/bin/jgit"
+abs_proj_path=$(dirname "$(readlink -f "$0")")
+source "$abs_proj_path/util.sh"
 
-if [ "$EUID" -ne 0 ]; then
-    echo "Please run as root"
-    exit 1
-fi
-
-if [ ! -L $binpath ]; then
-    echo "jgit symlink does not exist"
+if ! is_installed; then
+    echo "jgit is not installed"
     exit 0
 fi
 
-sudo rm $binpath
-echo "jgit symlink has been removed"
+sudo rm "$completionpath"
+sudo rm "$binpath"
+
+echo "jgit has been uninstalled"
