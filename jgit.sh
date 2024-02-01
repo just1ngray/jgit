@@ -44,12 +44,9 @@ branch () {
     git fetch
     git worktree add "$name"
     cd "$name"
-
-    if ! git branch --set-upstream-to=origin/"$name"; then
-        echo "Branch does not exist on remote repository"
-        echo "On your first push you will have to execute:"
-        echo "      git push --set-upstream origin $name"
-    fi
+    git checkout "$name"
+    git branch --set-upstream-to=origin/"$name"
+    git pull
 }
 
 # Delete local worktrees that do not have corresponding remote branches
