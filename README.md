@@ -1,7 +1,7 @@
 # jgit
 
 ```
-JGit - Justin's simple git repository and worktree manager.
+Git - Justin's simple git repository and worktree manager.
 
     Git worktrees offer a powerful capability: allowing developers to
     simultaneously checkout multiple branches from a single repository by
@@ -18,6 +18,9 @@ JGit - Justin's simple git repository and worktree manager.
     provides intuitive commands and workflows to facilitate common tasks,
     enabling smoother branch management and increased productivity in
     git-based projects.
+
+    Note: this utility does not replace git, and still requires a fundamental
+          understanding of git and its basic commands.
 
 Usage: /usr/local/bin/jgit {repo|branch|clean} [args]
 
@@ -56,5 +59,5 @@ To uninstall jgit:
     1. Run the uninstall script
         $ sudo ./uninstall.sh
     2. Remove the jgit directory you are currently inside of
-        $ rm -rf ../jgit
+        $ rm -rf ../jgi
 ```
