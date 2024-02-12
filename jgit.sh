@@ -8,6 +8,7 @@ repo () {
     local url=$2
 
     if [ -z "$name" ] || [ -z "$url" ]; then
+        help
         echo "Usage: repo <name> <url>"
         exit 1
     fi
@@ -30,7 +31,8 @@ branch () {
 
     # basic validation
     if [ -z "$name" ]; then
-        echo "Usage: branch <name>"
+        help
+        echo "Usage: branch <name> [from]"
         exit 1
     fi
     if [ ! -e .bare ]; then
