@@ -1,7 +1,7 @@
 # jgit
 
 ```
-Git - Justin's simple git repository and worktree manager.
+JGit - Justin's simple git repository and worktree manager.
 
     Git worktrees offer a powerful capability: allowing developers to
     simultaneously checkout multiple branches from a single repository by
@@ -34,7 +34,11 @@ Usage: /usr/local/bin/jgit {repo|branch|clean} [args]
             be prompted to choose a 'from' branch (with the default being the
             repo's default branch).
     clean
-        Delete local worktrees that do not have corresponding remote branches
+        Delete local worktrees that do not have corresponding remote branches,
+        and deletes branches which are not checked out by any worktree. This
+        does not delete remote branches.
+    help
+        Prints this message
 
 Typical usage:
 
@@ -59,5 +63,5 @@ To uninstall jgit:
     1. Run the uninstall script
         $ sudo ./uninstall.sh
     2. Remove the jgit directory you are currently inside of
-        $ rm -rf ../jgi
+        $ rm -rf ../jgit
 ```

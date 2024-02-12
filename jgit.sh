@@ -79,15 +79,7 @@ branch () {
     git pull
 }
 
-# Delete local worktrees that do not have corresponding remote branches
-clean () {
-    if [ ! -e .bare ]; then
-        echo "This command must be executed from your top-level worktree repository"
-        exit 1
-    fi
-
-    git fetch --prune
-
+_clean_worktrees() {
     remote_branches=$(git branch --remotes | grep -Po "origin/\K.+")
     local_worktree_branches=$(git worktree list | grep -Po "\[.+\]$" | tr -d '[]')
 
@@ -99,8 +91,8 @@ clean () {
     done
 
     if [ "$remove" = "" ]; then
-        echo "Nothing to delete. Every worktree branch exists on remote"
-        exit 0
+        echo "No worktrees to delete. Every worktree branch exists on remote"
+        return
     fi
 
     echo -e "\nWORKTREES TO DELETE"
@@ -111,8 +103,8 @@ clean () {
     read proceed
 
     if [ "$proceed" != "y" ]; then
-        echo "Exiting"
-        exit 0
+        echo "Cancelling worktree removal"
+        return
     fi
 
     for branch in $remove; do
@@ -122,6 +114,57 @@ clean () {
 
     echo -e "\nREMAINING WORKTREES:"
     git worktree list | sed 's/^/    /'
+}
+
+# delete local branches that are not checked out to a worktree
+_clean_branches() {
+    local_branches=$(git branch --format='%(refname:short)')
+    local_worktree_branches=$(git worktree list | grep -Po "\[.+\]$" | tr -d '[]')
+
+    remove=""
+    for branch in $local_branches; do
+        if ! echo "$local_worktree_branches" | grep -q "^$branch$"; then
+            remove+="$branch "
+        fi
+    done
+
+    if [ "$remove" = "" ]; then
+        echo "No branches to delete. Every branch is checked out on a worktree"
+        return
+    fi
+
+    echo -e "\nBRANCHES TO DELETE"
+    echo -n "    "
+    echo -e "$remove" | sed 's/ /\n    /g'
+
+    echo -en "Proceed? y/(n): "
+    read proceed
+
+    if [ "$proceed" != "y" ]; then
+        echo "Cancelling branch removal"
+        return
+    fi
+
+    for branch in $remove; do
+        git branch -D "$branch"
+    done
+
+    echo -e "\nREMAINING BRANCHES:"
+    git branch
+}
+
+# Delete local worktrees that do not have corresponding remote branches, and
+# deletes branches which are not attached to any worktree
+clean () {
+    if [ ! -e .bare ]; then
+        echo "This command must be executed from your top-level worktree repository"
+        exit 1
+    fi
+
+    git fetch --prune
+
+    _clean_worktrees
+    _clean_branches
 }
 
 
@@ -161,7 +204,11 @@ Usage: $0 {repo|branch|clean} [args]
             be prompted to choose a 'from' branch (with the default being the
             repo's default branch).
     clean
-        Delete local worktrees that do not have corresponding remote branches
+        Delete local worktrees that do not have corresponding remote branches,
+        and deletes branches which are not checked out by any worktree. This
+        does not delete remote branches.
+    help
+        Prints this message
 
 Typical usage:
 
