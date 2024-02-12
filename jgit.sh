@@ -192,7 +192,7 @@ JGit - Justin's simple git repository and worktree manager.
     Note: this utility does not replace git, and still requires a fundamental
           understanding of git and its basic commands.
 
-Usage: $0 {repo|branch|clean} [args]
+Usage: $0 {repo|branch|clean|help} [args]
 
     repo <name> <url>
         Create a worktree repository
