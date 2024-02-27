@@ -102,7 +102,7 @@ _clean_worktrees() {
     echo -en "Proceed? y/(n): "
     read proceed
 
-    if [ "$proceed" != "y" ]; then
+    if ! [[ "$proceed" =~ [Yy].* ]]; then
         echo "Cancelling worktree removal"
         return
     fi
@@ -140,7 +140,7 @@ _clean_branches() {
     echo -en "Proceed? y/(n): "
     read proceed
 
-    if [ "$proceed" != "y" ]; then
+    if ! [[ "$proceed" =~ [Yy].* ]]; then
         echo "Cancelling branch removal"
         return
     fi
