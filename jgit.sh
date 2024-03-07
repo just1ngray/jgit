@@ -240,15 +240,15 @@ To uninstall jgit:
 
 
 case "$1" in
-    repo)
+    repo*|clone)
         shift
         repo "$@"
         ;;
-    branch)
+    branch|checkout)
         shift
         branch "$@"
         ;;
-    clean)
+    clean*|prune|remove)
         clean
         ;;
     help|-h|--help)
