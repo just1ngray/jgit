@@ -71,7 +71,7 @@ branch () {
     fi
 
     # create the worktree and set it to track exactly the remote branch
-    git worktree add "$name"
+    git worktree add -B "$name" "$name"
     cd "$name"
     git checkout "$name"
     git branch --set-upstream-to=origin/"$name"
