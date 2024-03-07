@@ -173,21 +173,20 @@ help () {
     echo """
 JGit - Justin's simple git repository and worktree manager.
 
-    Git worktrees offer a powerful capability: allowing developers to
-    simultaneously checkout multiple branches from a single repository by
-    isolating them into distinct directories on disk. Unlike traditional
-    cloning, worktrees efficiently share the same object database, reducing
-    duplication and conserving disk/network space.
+    As developers we multi-task: a bugfix here, a PR review there, a couple of
+    features being developed in parallel. Stashing changes is a nightmare, and
+    sometimes your spahgetti code isn't quite ready to be committed.
 
-    This feature eliminates the need to stash or commit changes when switching
-    between branches, streamlining development workflows. However, leveraging
-    worktrees can be daunting for newcomers due to their complexity.
+    Worktrees are an excellent tool for solving this problem. They are similar
+    to cloning the repository multiple times, but without the overhead since
+    they share the same git object store. This means that you can have multiple
+    branches checked out at the same time, and you can switch between them
+    simply by changing your directory.
 
-    Enter jgit, a solution designed to simplify the management of git
-    worktrees. While jgit doesn't support all git worktree operations, it
-    provides intuitive commands and workflows to facilitate common tasks,
-    enabling smoother branch management and increased productivity in
-    git-based projects.
+    In general, worktrees don't enforce many branch rules. With jgit we gently
+    enforce that each worktree tracks a remote branch, and that the worktree
+    checks out a branch whose name is the same as the path of the worktree,
+    relative to the root of the jgit-cloned repository.
 
     Note: this utility does not replace git, and still requires a fundamental
           understanding of git and its basic commands.
