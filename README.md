@@ -23,8 +23,9 @@ JGit - Justin's simple git repository and worktree manager.
 
 Usage: /usr/local/bin/jgit {repo|branch|clean|help} [args]
 
-    repo <name> <url>
-        Create a worktree repository
+    repo <url> [path]
+        Create a jgit-supported worktree repository from a standard clone URL,
+        optionally saved to a particular path on disk.
     branch <name> [from]
         Create a new worktree for the given branch 'name'.
         The 'from' argument is never needed, and is intended for advanced use:
@@ -37,7 +38,7 @@ Usage: /usr/local/bin/jgit {repo|branch|clean|help} [args]
         and deletes branches which are not checked out by any worktree. This
         does not delete remote branches.
     help
-        Prints this message
+        Prints this message.
 
 Typical usage:
 

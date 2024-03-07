@@ -4,22 +4,23 @@ set -e
 
 # Create a worktree repository
 repo () {
-    local name=$1
-    local url=$2
+    local url=$1
+    local path=${2:-$(grep -Po "[^/]+\.git$" <<< "$url" | sed "s/.git$//")}
 
-    if [ -z "$name" ] || [ -z "$url" ]; then
+    if [ -z "$path" ] || [ -z "$url" ]; then
         help
-        echo "Usage: repo <name> <url>"
+        echo "Usage: repo <url> [path]"
         exit 1
     fi
 
-    if [ -d "$name" ]; then
-        echo "Repository '$name' already exists"
+    if [ -d "$path" ]; then
+        echo "Path '$path' already exists"
         exit 1
     fi
 
-    mkdir -p "$name"
-    cd "$name"
+    echo "Creating folder to hold jgit worktree repository at: $path"
+    mkdir -p "$path"
+    cd "$path"
     git clone --bare "$url" .bare
     echo "gitdir: .bare" > .git
     git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
@@ -193,8 +194,9 @@ JGit - Justin's simple git repository and worktree manager.
 
 Usage: $0 {repo|branch|clean|help} [args]
 
-    repo <name> <url>
-        Create a worktree repository
+    repo <url> [path]
+        Create a jgit-supported worktree repository from a standard clone URL,
+        optionally saved to a particular path on disk.
     branch <name> [from]
         Create a new worktree for the given branch 'name'.
         The 'from' argument is never needed, and is intended for advanced use:
@@ -207,7 +209,7 @@ Usage: $0 {repo|branch|clean|help} [args]
         and deletes branches which are not checked out by any worktree. This
         does not delete remote branches.
     help
-        Prints this message
+        Prints this message.
 
 Typical usage:
 
