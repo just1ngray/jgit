@@ -34,9 +34,12 @@ Usage: /usr/local/bin/jgit {repo|branch|clean|help} [args]
             be prompted to choose a 'from' branch (with the default being the
             repo's default branch).
     clean
+    clean yy
         Delete local worktrees that do not have corresponding remote branches,
         and deletes branches which are not checked out by any worktree. This
         does not delete remote branches.
+        If 'yy' is provided, the command will proceed without prompting for
+        confirmation.
     help
         Prints this message.
 

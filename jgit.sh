@@ -114,12 +114,14 @@ _clean_worktrees() {
     echo -n "    "
     echo -e "$remove" | sed 's/ /\n    /g'
 
-    echo -en "Proceed? y/(n): "
-    read proceed
+    if [ "$1" == "true" ]; then
+        echo -en "Proceed? y/(n): "
+        read proceed
 
-    if ! [[ "$proceed" =~ [Yy].* ]]; then
-        echo "Cancelling worktree removal"
-        return
+        if ! [[ "$proceed" =~ [Yy].* ]]; then
+            echo "Cancelling worktree removal"
+            return
+        fi
     fi
 
     for branch in $remove; do
@@ -152,12 +154,14 @@ _clean_branches() {
     echo -n "    "
     echo -e "$remove" | sed 's/ /\n    /g'
 
-    echo -en "Proceed? y/(n): "
-    read proceed
+    if [ "$1" == "true" ]; then
+        echo -en "Proceed? y/(n): "
+        read proceed
 
-    if ! [[ "$proceed" =~ [Yy].* ]]; then
-        echo "Cancelling branch removal"
-        return
+        if ! [[ "$proceed" =~ [Yy].* ]]; then
+            echo "Cancelling branch removal"
+            return
+        fi
     fi
 
     for branch in $remove; do
@@ -178,8 +182,14 @@ clean () {
 
     git fetch --prune
 
-    _clean_worktrees
-    _clean_branches
+    prompt=true
+    if [[ "$1" == "yy" || "$1" == "-y" ]]; then
+        echo "!! Proceeding to clean worktrees and branches without prompting for confirmation"
+        prompt=false
+    fi
+
+    _clean_worktrees $prompt
+    _clean_branches $prompt
 }
 
 
@@ -219,9 +229,12 @@ Usage: $0 {repo|branch|clean|help} [args]
             be prompted to choose a 'from' branch (with the default being the
             repo's default branch).
     clean
+    clean yy
         Delete local worktrees that do not have corresponding remote branches,
         and deletes branches which are not checked out by any worktree. This
         does not delete remote branches.
+        If 'yy' is provided, the command will proceed without prompting for
+        confirmation.
     help
         Prints this message.
 
@@ -269,7 +282,8 @@ case "$1" in
         branch "$@"
         ;;
     clean*|prune|remove)
-        clean
+        shift
+        clean "$@"
         ;;
     help|-h|--help)
         help
