@@ -58,6 +58,12 @@ Typical usage:
         after you've merged a PR and deleted the remote branch)
         $ jgit clean
 
+Tip:
+
+    If you want to open a new 'repo' or 'branch' in your editor, you can
+    capture the output from the command. E.g.,
+        $ code $(jgit repo https://github.com/just1ngray/jgit.git)
+
 To uninstall jgit:
 
     1. Run the uninstall script

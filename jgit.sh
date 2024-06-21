@@ -2,6 +2,16 @@
 
 set -e
 
+exec 3>&1 # Save the original stdout (file descriptor 1)
+trap 'exec 3>&-' EXIT # Ensure file descriptor 3 is closed upon script exit
+exec 1>&2 # Redirect all stdout to stderr
+
+# One run, stdout redirection is undone
+stdout() {
+    exec 1>&3
+    echo "$@"
+}
+
 # Create a worktree repository
 repo () {
     local url=$1
@@ -24,6 +34,8 @@ repo () {
     git clone --bare "$url" .bare
     echo "gitdir: .bare" > .git
     git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+
+    stdout "$path"
 }
 
 # Create a new worktree for the given branch
@@ -78,6 +90,8 @@ branch () {
     git branch --set-upstream-to=origin/"$name"
     git reset --hard origin/"$name"
     git pull
+
+    stdout "$name"
 }
 
 _clean_worktrees() {
@@ -171,7 +185,7 @@ clean () {
 
 # Prints help and usage message
 help () {
-    echo """
+    stdout """
 JGit - Justin's simple git repository and worktree manager.
 
     As developers we multi-task: a bugfix here, a PR review there, a couple of
@@ -228,6 +242,12 @@ Typical usage:
     5. Clean up old worktrees whose branch no longer exists on remote (like
         after you've merged a PR and deleted the remote branch)
         $ jgit clean
+
+Tip:
+
+    If you want to open a new 'repo' or 'branch' in your editor, you can
+    capture the output from the command. E.g.,
+        $ code \$(jgit repo https://github.com/just1ngray/jgit.git)
 
 To uninstall jgit:
 
