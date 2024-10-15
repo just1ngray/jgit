@@ -127,6 +127,16 @@ _clean_worktrees() {
     for branch in $remove; do
         echo "Removing worktree $branch"
         git worktree remove "$branch" # do not -f (force)
+
+        # remove (now) empty directories since the worktree was removed
+        # ... this happens when the branch name contains some '/' and
+        #     the worktree is created in a subdirectory
+        dir=$(realpath "$(dirname "$branch")")
+        while [ "$dir" != "$(pwd)" ]; do
+            rmdir "$dir" || break
+            echo "Deleted empty directory $dir"
+            dir=$(dirname "$dir")
+        done
     done
 
     echo -e "\nREMAINING WORKTREES:"
