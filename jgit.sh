@@ -133,7 +133,7 @@ _clean_worktrees() {
         #     the worktree is created in a subdirectory
         dir=$(realpath "$(dirname "$branch")")
         while [ "$dir" != "$(pwd)" ]; do
-            rmdir "$dir" || break
+            rmdir "$dir" >/dev/null 2>&1 || break
             echo "Deleted empty directory $dir"
             dir=$(dirname "$dir")
         done
