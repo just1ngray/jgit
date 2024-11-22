@@ -53,7 +53,7 @@ Typical usage:
         $ sudo ./install.sh
     3. Create a new worktree repository (perhaps in the same directory as the
         jgit source)
-        $ jgit repo hello-world https://github.com/leachim6/hello-world.git
+        $ jgit repo https://github.com/leachim6/hello-world.git
     4. Create a new worktree for a given branch
         $ cd hello-world
         $ jgit branch main
