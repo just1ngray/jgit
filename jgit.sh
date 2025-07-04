@@ -79,7 +79,6 @@ branch () {
         fi
 
         echo "Creating branch '$name' from '$from_branch'"
-        git fetch origin "$from_branch":"$from_branch"
         git push origin "$from_branch":"$name"
     fi
 
