@@ -35,6 +35,20 @@ repo () {
     echo "gitdir: .bare" > .git
     git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
 
+    # warn the 'cloner' if their git config doesn't provide both user.name and user.email
+    echo -e '\e[38;5;208m' # TEXT: ORANGE
+    if [[ -z $(git config --get user.name) ]]; then
+        echo "WARNING! Git config doesn't know your user.name. You won't be able to commit unless you configure it."
+        echo "  Set globally:       $ git config --global user.name 'Your Name'"
+        echo "  For this repo only: $ cd '$path' && git config --local user.name 'Your Name'"
+    fi
+    if [[ -z $(git config --get user.email) ]]; then
+        echo "WARNING! Git config doesn't know your user.email. You won't be able to commit unless you configure it."
+        echo "  Set globally:       $ git config --global user.email 'email@example.com'"
+        echo "  For this repo only: $ cd '$path' && git config --local user.email 'email@example.com'"
+    fi
+    echo -e '\e[0m' # RESET
+
     stdout "$path"
 }
 
