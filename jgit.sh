@@ -93,7 +93,7 @@ branch () {
         fi
 
         echo "Creating branch '$name' from '$from_branch'"
-        git push origin "$from_branch":"$name"
+        git push origin "refs/remotes/origin/$from_branch:$name"
     fi
 
     # create the worktree and set it to track exactly the remote branch
