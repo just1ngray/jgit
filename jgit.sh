@@ -103,7 +103,7 @@ branch () {
         git worktree add -B "$name" "$name"
         cd "$name"
         git branch --set-upstream-to="origin/$name"
-        git pull
+        git reset --hard "origin/$name"
     fi
 
     stdout "$name"
