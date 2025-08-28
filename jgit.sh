@@ -95,14 +95,16 @@ branch () {
         echo "Creating branch '$name' from '$from_branch'"
         git fetch origin "$from_branch"
         git worktree add -B "$name" "$name" "origin/$from_branch"
+        cd "$name"
+        git push origin "$name"
+        git branch --set-upstream-to="origin/$name"
     else
         # $name branch already exists on remote
         git worktree add -B "$name" "$name"
+        cd "$name"
+        git branch --set-upstream-to="origin/$name"
+        git pull
     fi
-
-    cd "$name"
-    git push origin "$name"
-    git branch --set-upstream-to="origin/$name"
 
     stdout "$name"
 }
