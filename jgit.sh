@@ -139,9 +139,11 @@ _clean_worktrees() {
         fi
     fi
 
+    must_force=()
     for branch in $remove; do
         echo "Removing worktree $branch"
-        git worktree remove "$branch" # do not -f (force)
+         # do not -f (force)
+        git worktree remove "$branch" || must_force+=($branch) && continue
 
         # remove (now) empty directories since the worktree was removed
         # ... this happens when the branch name contains some '/' and
@@ -153,6 +155,15 @@ _clean_worktrees() {
             dir=$(dirname "$dir")
         done
     done
+
+    echo -e "\n---------------------"
+
+    if [[ "$must_force" != "" ]]; then
+        echo -e "\nUntracked files. Inspect, and possibly remove with --force:"
+        for worktree in "${must_force[@]}"; do
+            echo "    git worktree remove '$worktree' --force"
+        done
+    fi
 
     echo -e "\nREMAINING WORKTREES:"
     git worktree list | sed 's/^/    /'
