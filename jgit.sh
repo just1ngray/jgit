@@ -281,7 +281,7 @@ Typical usage:
     2. Install jgit program to your system (optional - can be called directly
         from the source directory)
         $ cd jgit
-        $ sudo ./install.sh
+        $ ./install.sh
     3. Create a new worktree repository (perhaps in the same directory as the
         jgit source)
         $ jgit repo https://github.com/leachim6/hello-world.git
@@ -301,7 +301,7 @@ Tip:
 To uninstall jgit:
 
     1. Run the uninstall script
-        $ sudo ./uninstall.sh
+        $ ./uninstall.sh
     2. Remove the jgit directory you are currently inside of
         $ rm -rf ../jgit
     """
