@@ -21,7 +21,7 @@ JGit - Justin's simple git repository and worktree manager.
     Note: this utility does not replace git, and still requires a fundamental
           understanding of git and its basic commands.
 
-Usage: /usr/local/bin/jgit {repo|branch|clean|help} [args]
+Usage: /home/justin/.local/bin/jgit {repo|branch|clean|tree|help} [args]
 
     repo <url> [path]
         Create a jgit-supported worktree repository from a standard clone URL,
@@ -40,6 +40,9 @@ Usage: /usr/local/bin/jgit {repo|branch|clean|help} [args]
         does not delete remote branches.
         If 'yy' is provided, the command will proceed without prompting for
         confirmation.
+    tree
+        Recursively finds and prints a tree of all jgit worktree repositories
+        and their worktree branches in the current directory.
     help
         Prints this message.
 
@@ -50,7 +53,7 @@ Typical usage:
     2. Install jgit program to your system (optional - can be called directly
         from the source directory)
         $ cd jgit
-        $ sudo ./install.sh
+        $ ./install.sh
     3. Create a new worktree repository (perhaps in the same directory as the
         jgit source)
         $ jgit repo https://github.com/leachim6/hello-world.git
@@ -60,6 +63,8 @@ Typical usage:
     5. Clean up old worktrees whose branch no longer exists on remote (like
         after you've merged a PR and deleted the remote branch)
         $ jgit clean
+    6. See all your local jgit repos
+        $ jgit tree
 
 Tip:
 
@@ -70,7 +75,7 @@ Tip:
 To uninstall jgit:
 
     1. Run the uninstall script
-        $ sudo ./uninstall.sh
+        $ ./uninstall.sh
     2. Remove the jgit directory you are currently inside of
         $ rm -rf ../jgit
 ```
