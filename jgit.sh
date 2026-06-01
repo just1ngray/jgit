@@ -228,6 +228,19 @@ clean () {
     _clean_branches $prompt
 }
 
+# Recursively map and print a tree of all jgit worktree repositories
+show_tree () {
+    # Find directories containing '.bare', strip the '/.bare' suffix and leading './'
+    local repos=$(find . -type d -name ".bare" 2>/dev/null | sed 's|/\.bare$||' | sed 's|^\./||')
+
+    if [ -z "$repos" ]; then
+        echo "No .bare jgit repositories found in $(pwd)"
+        return
+    fi
+
+    # Pipe the raw paths to 'tree --fromfile' which builds a tree purely from the string paths
+    echo "$repos" | command tree --fromfile .
+}
 
 # Prints help and usage message
 help () {
@@ -252,7 +265,7 @@ JGit - Justin's simple git repository and worktree manager.
     Note: this utility does not replace git, and still requires a fundamental
           understanding of git and its basic commands.
 
-Usage: $0 {repo|branch|clean|help} [args]
+Usage: $0 {repo|branch|clean|tree|help} [args]
 
     repo <url> [path]
         Create a jgit-supported worktree repository from a standard clone URL,
@@ -271,6 +284,9 @@ Usage: $0 {repo|branch|clean|help} [args]
         does not delete remote branches.
         If 'yy' is provided, the command will proceed without prompting for
         confirmation.
+    tree
+        Recursively finds and prints a tree of all jgit worktree repositories
+        in the current directory. Does not traverse into each branch's sources.
     help
         Prints this message.
 
@@ -291,6 +307,8 @@ Typical usage:
     5. Clean up old worktrees whose branch no longer exists on remote (like
         after you've merged a PR and deleted the remote branch)
         $ jgit clean
+    6. See all your local jgit repos
+        $ jgit tree
 
 Tip:
 
@@ -307,7 +325,6 @@ To uninstall jgit:
     """
 }
 
-
 case "$1" in
     repo*|clone)
         shift
@@ -320,6 +337,10 @@ case "$1" in
     clean*|prune|remove)
         shift
         clean "$@"
+        ;;
+    tree)
+        shift
+        show_tree "$@"
         ;;
     help|-h|--help)
         help
