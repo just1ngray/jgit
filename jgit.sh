@@ -228,18 +228,57 @@ clean () {
     _clean_branches $prompt
 }
 
-# Recursively map and print a tree of all jgit worktree repositories
+# Recursively map and print a tree of all jgit worktree repositories and their local branches
 show_tree () {
     # Find directories containing '.bare', strip the '/.bare' suffix and leading './'
     local repos=$(find . -type d -name ".bare" 2>/dev/null | sed 's|/\.bare$||' | sed 's|^\./||')
 
     if [ -z "$repos" ]; then
-        echo "No .bare jgit repositories found in $(pwd)"
+        echo "No jgit repositories found in $(pwd)"
         return
     fi
 
-    # Pipe the raw paths to 'tree --fromfile' which builds a tree purely from the string paths
-    echo "$repos" | command tree --fromfile .
+    local tree_input=""
+    local repo_count=0
+    local worktree_count=0
+
+    for repo in $repos; do
+        repo_count=$((repo_count + 1))
+
+        # Record the repo root
+        if [ "$repo" == "." ]; then
+            tree_input+=".\n"
+        else
+            tree_input+="${repo}\n"
+        fi
+
+        # Get absolute path to accurately strip prefix from worktree paths
+        local repo_abs
+        repo_abs=$(cd "$repo" && pwd)
+
+        # Extract absolute paths of all worktrees, ignoring the core '.bare' directory
+        local worktrees
+        worktrees=$(git -C "$repo" worktree list 2>/dev/null | awk '{print $1}' | grep -v '\.bare$')
+
+        for wt in $worktrees; do
+            worktree_count=$((worktree_count + 1))
+
+            # Convert absolute worktree path to a path relative to the repo root
+            local rel_wt="${wt#$repo_abs/}"
+
+            # Format string for tree --fromfile
+            if [ "$repo" == "." ]; then
+                tree_input+="${rel_wt}\n"
+            else
+                tree_input+="${repo}/${rel_wt}\n"
+            fi
+        done
+    done
+
+    # Pipe the constructed string block to tree
+    echo -e "$tree_input" | command tree --noreport --fromfile .
+    echo ""
+    echo "$repo_count jgit repositories, $worktree_count worktrees"
 }
 
 # Prints help and usage message
@@ -286,7 +325,7 @@ Usage: $0 {repo|branch|clean|tree|help} [args]
         confirmation.
     tree
         Recursively finds and prints a tree of all jgit worktree repositories
-        in the current directory. Does not traverse into each branch's sources.
+        and their worktree branches in the current directory.
     help
         Prints this message.
 
