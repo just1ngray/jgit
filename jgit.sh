@@ -258,21 +258,29 @@ show_tree () {
 
         # Extract absolute paths of all worktrees, ignoring the core '.bare' directory
         local worktrees
-        worktrees=$(git -C "$repo" worktree list 2>/dev/null | awk '{print $1}' | grep -v '\.bare$')
+        worktrees=$(git -C "$repo" worktree list 2>/dev/null | awk '$1 !~ /\.bare$/ {print $1}')
 
-        for wt in $worktrees; do
-            worktree_count=$((worktree_count + 1))
-
-            # Convert absolute worktree path to a path relative to the repo root
-            local rel_wt="${wt#$repo_abs/}"
-
-            # Format string for tree --fromfile
+        if [[ -z "$worktrees" ]]; then
             if [ "$repo" == "." ]; then
-                tree_input+="${rel_wt}\n"
+                tree_input+="(no worktrees)\n"
             else
-                tree_input+="${repo}/${rel_wt}\n"
+                tree_input+="${repo}/(no worktrees)\n"
             fi
-        done
+        else
+            for wt in $worktrees; do
+                worktree_count=$((worktree_count + 1))
+
+                # Convert absolute worktree path to a path relative to the repo root
+                local rel_wt="${wt#$repo_abs/}"
+
+                # Format string for tree --fromfile
+                if [ "$repo" == "." ]; then
+                    tree_input+="${rel_wt}\n"
+                else
+                    tree_input+="${repo}/${rel_wt}\n"
+                fi
+            done
+        fi
     done
 
     # Pipe the constructed string block to tree
