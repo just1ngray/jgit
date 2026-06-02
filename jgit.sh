@@ -273,11 +273,15 @@ show_tree () {
                 # Convert absolute worktree path to a path relative to the repo root
                 local rel_wt="${wt#$repo_abs/}"
 
+                # Replace all standard slashes with a Unicode Division Slash (U+2215).
+                # This prevents 'tree' from splitting it, but keeps the visual slash!
+                local flat_wt="${rel_wt//\//∕}"
+
                 # Format string for tree --fromfile
                 if [ "$repo" == "." ]; then
-                    tree_input+="${rel_wt}\n"
+                    tree_input+="${flat_wt}\n"
                 else
-                    tree_input+="${repo}/${rel_wt}\n"
+                    tree_input+="${repo}/${flat_wt}\n"
                 fi
             done
         fi
