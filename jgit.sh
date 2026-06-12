@@ -141,9 +141,18 @@ _clean_worktrees() {
 
     must_force=()
     for branch in $remove; do
+        # if there are untracked files, don't remove the worktree
+        if [ -n "$(git -C "$branch" status --porcelain)" ]; then
+            echo "  -> Skipping: '$branch' contains untracked or modified files."
+            must_force+=("$branch")
+            continue
+        fi
+
         echo "Removing worktree $branch"
-         # do not -f (force)
-        git worktree remove "$branch" || must_force+=($branch) && continue
+
+        # remove with --force. we know there are no untracked files, so --force
+        # removal to resolve any issues with git-submodules in the worktree
+        git worktree remove "$branch" --force
 
         # remove (now) empty directories since the worktree was removed
         # ... this happens when the branch name contains some '/' and
