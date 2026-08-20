@@ -40,9 +40,11 @@ Usage: /home/justin/.local/bin/jgit {repo|branch|clean|tree|help} [args]
         does not delete remote branches.
         If 'yy' is provided, the command will proceed without prompting for
         confirmation.
-    tree
-        Recursively finds and prints a tree of all jgit worktree repositories
-        and their worktree branches in the current directory.
+    tree [-r[b]|-br]
+        Recursively finds and prints a tree of jgit worktree repositories in
+        the current directory. By default (or with -rb or -br), includes their
+        worktree branches. Use -r to list repositories only. -b is invalid on
+        its own because branches are shown only within a repository tree.
     help
         Prints this message.
 
@@ -63,8 +65,10 @@ Typical usage:
     5. Clean up old worktrees whose branch no longer exists on remote (like
         after you've merged a PR and deleted the remote branch)
         $ jgit clean
-    6. See all your local jgit repos
+    6. See all your local jgit repos and their worktrees
         $ jgit tree
+       List repositories without their worktrees
+        $ jgit tree -r
 
 Tip:
 

@@ -237,8 +237,26 @@ clean () {
     _clean_branches $prompt
 }
 
-# Recursively map and print a tree of all jgit worktree repositories and their local branches
+# Recursively map and print a tree of jgit worktree repositories, optionally with local branches
 show_tree () {
+    local show_branches=true
+
+    case "$1" in
+        ""|-rb|-br)
+            ;;
+        -r)
+            show_branches=false
+            ;;
+        -b)
+            echo "Invalid tree option: '-b' must be combined with '-r'."
+            return 1
+            ;;
+        *)
+            echo "Invalid tree option: '$1'. Use -r, -rb, or -br."
+            return 1
+            ;;
+    esac
+
     # Find directories containing '.bare', strip the '/.bare' suffix and leading './'
     local repos=$(find . -type d -name ".bare" 2>/dev/null | sed 's|/\.bare$||' | sed 's|^\./||')
 
@@ -261,45 +279,51 @@ show_tree () {
             tree_input+="${repo}\n"
         fi
 
-        # Get absolute path to accurately strip prefix from worktree paths
-        local repo_abs
-        repo_abs=$(cd "$repo" && pwd)
+        if [[ "$show_branches" == true ]]; then
+            # Get absolute path to accurately strip prefix from worktree paths
+            local repo_abs
+            repo_abs=$(cd "$repo" && pwd)
 
-        # Extract absolute paths of all worktrees, ignoring the core '.bare' directory
-        local worktrees
-        worktrees=$(git -C "$repo" worktree list 2>/dev/null | awk '$1 !~ /\.bare$/ {print $1}')
+            # Extract absolute paths of all worktrees, ignoring the core '.bare' directory
+            local worktrees
+            worktrees=$(git -C "$repo" worktree list 2>/dev/null | awk '$1 !~ /\.bare$/ {print $1}')
 
-        if [[ -z "$worktrees" ]]; then
-            if [ "$repo" == "." ]; then
-                tree_input+="(no worktrees)\n"
-            else
-                tree_input+="${repo}/(no worktrees)\n"
-            fi
-        else
-            for wt in $worktrees; do
-                worktree_count=$((worktree_count + 1))
-
-                # Convert absolute worktree path to a path relative to the repo root
-                local rel_wt="${wt#$repo_abs/}"
-
-                # Replace all standard slashes with a Unicode Division Slash (U+2215).
-                # This prevents 'tree' from splitting it, but keeps the visual slash!
-                local flat_wt="${rel_wt//\//∕}"
-
-                # Format string for tree --fromfile
+            if [[ -z "$worktrees" ]]; then
                 if [ "$repo" == "." ]; then
-                    tree_input+="${flat_wt}\n"
+                    tree_input+="(no worktrees)\n"
                 else
-                    tree_input+="${repo}/${flat_wt}\n"
+                    tree_input+="${repo}/(no worktrees)\n"
                 fi
-            done
+            else
+                for wt in $worktrees; do
+                    worktree_count=$((worktree_count + 1))
+
+                    # Convert absolute worktree path to a path relative to the repo root
+                    local rel_wt="${wt#$repo_abs/}"
+
+                    # Replace all standard slashes with a Unicode Division Slash (U+2215).
+                    # This prevents 'tree' from splitting it, but keeps the visual slash!
+                    local flat_wt="${rel_wt//\//∕}"
+
+                    # Format string for tree --fromfile
+                    if [ "$repo" == "." ]; then
+                        tree_input+="${flat_wt}\n"
+                    else
+                        tree_input+="${repo}/${flat_wt}\n"
+                    fi
+                done
+            fi
         fi
     done
 
     # Pipe the constructed string block to tree
     echo -e "$tree_input" | command tree --noreport --fromfile .
     echo ""
-    echo "$repo_count jgit repositories, $worktree_count worktrees"
+    if [[ "$show_branches" == true ]]; then
+        echo "$repo_count jgit repositories, $worktree_count worktrees"
+    else
+        echo "$repo_count jgit repositories"
+    fi
 }
 
 # Prints help and usage message
@@ -344,9 +368,11 @@ Usage: $0 {repo|branch|clean|tree|help} [args]
         does not delete remote branches.
         If 'yy' is provided, the command will proceed without prompting for
         confirmation.
-    tree
-        Recursively finds and prints a tree of all jgit worktree repositories
-        and their worktree branches in the current directory.
+    tree [-r[b]|-br]
+        Recursively finds and prints a tree of jgit worktree repositories in
+        the current directory. By default (or with -rb or -br), includes their
+        worktree branches. Use -r to list repositories only. -b is invalid on
+        its own because branches are shown only within a repository tree.
     help
         Prints this message.
 
@@ -367,8 +393,10 @@ Typical usage:
     5. Clean up old worktrees whose branch no longer exists on remote (like
         after you've merged a PR and deleted the remote branch)
         $ jgit clean
-    6. See all your local jgit repos
+    6. See all your local jgit repos and their worktrees
         $ jgit tree
+       List repositories without their worktrees
+        $ jgit tree -r
 
 Tip:
 

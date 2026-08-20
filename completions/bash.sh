@@ -35,6 +35,12 @@ _jgit() {
             fi
             return 0
             ;;
+        tree)
+            if [[ ${COMP_CWORD} -eq 2 ]]; then
+                COMPREPLY=( $(compgen -W "-r -rb -br" -- "${cur}") )
+            fi
+            return 0
+            ;;
         repo|clone)
             # Standard bash completion will fallback to directories for the path argument
             # due to the '-o default' flag on the complete command below

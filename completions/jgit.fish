@@ -30,5 +30,9 @@ complete -c jgit -f -n '__fish_seen_subcommand_from branch checkout' -a '(__fish
 # clean/prune/remove: auto-complete the 'yy' or '-y' flags
 complete -c jgit -f -n '__fish_seen_subcommand_from clean prune remove' -a 'yy -y' -d 'Proceed without prompting'
 
+# tree: include worktree branches by default; -r lists repositories only
+complete -c jgit -f -n '__fish_seen_subcommand_from tree' -a '-r' -d 'List repositories only'
+complete -c jgit -f -n '__fish_seen_subcommand_from tree' -a '-rb -br' -d 'List repositories and worktree branches'
+
 # repo/clone: allow standard file and directory path completion
 complete -c jgit -F -n '__fish_seen_subcommand_from repo clone'
