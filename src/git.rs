@@ -54,10 +54,6 @@ pub struct GitResult {
 }
 
 impl GitResult {
-    pub fn or_true(self) {
-
-    }
-
     pub fn assert_success(self) {
         if self.rc != 0 {
             eprintln!(

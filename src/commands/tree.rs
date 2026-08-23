@@ -14,11 +14,17 @@ pub struct TreeCommand {
 impl RunCommand for TreeCommand {
     fn run(&self, root: &Cli) {
         let show_worktrees = !self.hide_branches;
-        let cwd = std::env::current_dir().expect("Could not determine current directory");
+        let cwd = match std::env::current_dir() {
+            Ok(cwd) => cwd,
+            Err(error) => {
+                eprintln!("Could not determine current directory: {error}");
+                std::process::exit(1);
+            }
+        };
 
         let repos = Self::find_repos(&cwd);
         if repos.is_empty() {
-            println!("No jgit repositories found in {}", cwd.display());
+            eprintln!("No jgit repositories found in {}", cwd.display());
             return;
         }
 
@@ -66,11 +72,11 @@ impl RunCommand for TreeCommand {
 
         Self::print_tree(&tree_input);
 
-        println!();
+        eprintln!();
         if show_worktrees {
-            println!("{repo_count} jgit repositories, {worktree_count} worktrees");
+            eprintln!("{repo_count} jgit repositories, {worktree_count} worktrees");
         } else {
-            println!("{repo_count} jgit repositories");
+            eprintln!("{repo_count} jgit repositories");
         }
     }
 }
@@ -89,11 +95,15 @@ impl TreeCommand {
             };
 
             for entry in entries.flatten() {
-                let path = entry.path();
-                if !path.is_dir() {
+                let file_type = match entry.file_type() {
+                    Ok(file_type) => file_type,
+                    Err(_) => continue,
+                };
+                if !file_type.is_dir() {
                     continue;
                 }
 
+                let path = entry.path();
                 if path.file_name().is_some_and(|name| name == ".bare") {
                     let rel = path
                         .parent()
@@ -129,12 +139,12 @@ impl TreeCommand {
     }
 
     fn print_tree(tree_input: &str) {
-        let child = std::process::Command::new("tree")
+        let mut child = match std::process::Command::new("tree")
             .args(["--noreport", "--fromfile", "."])
             .stdin(Stdio::piped())
-            .spawn();
-
-        let mut child = match child {
+            .stdout(Stdio::piped())
+            .spawn()
+        {
             Ok(child) => child,
             Err(error) => {
                 eprintln!("Could not execute 'tree': {error}");
@@ -142,12 +152,50 @@ impl TreeCommand {
             }
         };
 
-        if let Some(stdin) = child.stdin.as_mut() {
-            stdin
-                .write_all(tree_input.as_bytes())
-                .expect("Could not write to tree's stdin");
+        let mut tree_stdout = match child.stdout.take() {
+            Some(stdout) => stdout,
+            None => {
+                eprintln!("Could not capture 'tree' output");
+                std::process::exit(1);
+            }
+        };
+        let output_thread =
+            std::thread::spawn(move || std::io::copy(&mut tree_stdout, &mut std::io::stderr()));
+
+        let mut stdin = match child.stdin.take() {
+            Some(stdin) => stdin,
+            None => {
+                eprintln!("Could not write to 'tree' stdin");
+                std::process::exit(1);
+            }
+        };
+        if let Err(error) = stdin.write_all(tree_input.as_bytes()) {
+            eprintln!("Could not write to 'tree' stdin: {error}");
+            std::process::exit(1);
+        }
+        drop(stdin);
+
+        let status = match child.wait() {
+            Ok(status) => status,
+            Err(error) => {
+                eprintln!("Could not wait for 'tree' to finish: {error}");
+                std::process::exit(1);
+            }
+        };
+        match output_thread.join() {
+            Ok(Ok(_)) => {}
+            Ok(Err(error)) => {
+                eprintln!("Could not write 'tree' output to stderr: {error}");
+                std::process::exit(1);
+            }
+            Err(_) => {
+                eprintln!("Could not forward 'tree' output to stderr");
+                std::process::exit(1);
+            }
         }
 
-        child.wait().expect("Could not wait for tree to finish");
+        if !status.success() {
+            std::process::exit(status.code().unwrap_or(1));
+        }
     }
 }

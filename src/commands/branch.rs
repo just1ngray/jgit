@@ -16,6 +16,8 @@ fn complete_branches(current: &std::ffi::OsStr) -> Vec<clap_complete::Completion
     let current_str = current.to_str().unwrap_or("");
 
     // Shell out to git to get actual branch names
+    // noted limitation: typically we permit ``--git /executable`` flag but this is
+    // not supported for auto completions because we don't know the flag's value
     if let Ok(output) = std::process::Command::new("git")
         .arg("branch")
         .arg("--format=%(refname:short)")

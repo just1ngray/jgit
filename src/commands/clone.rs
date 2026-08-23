@@ -15,7 +15,13 @@ pub struct CloneCommand {
 
 impl RunCommand for CloneCommand {
     fn run(&self, root: &Cli) {
-        let path = self.get_clone_path();
+        let path = match self.get_clone_path() {
+            Ok(path) => path,
+            Err(error) => {
+                eprintln!("{error}");
+                std::process::exit(1);
+            }
+        };
         if path.exists() {
             eprintln!("Path '{}' already exists", path.display());
             std::process::exit(1);
@@ -26,17 +32,18 @@ impl RunCommand for CloneCommand {
             "Creating folder to hold jgit worktree repository at: {}",
             path.display()
         );
-        std::fs::create_dir_all(&path)
-            .unwrap_or_else(|error| panic!("Could not create '{}': {error}", path.display()));
+        if let Err(error) = std::fs::create_dir_all(&path) {
+            eprintln!("Could not create '{}': {error}", path.display());
+            std::process::exit(1);
+        }
 
         git.run(["clone", "--bare", &self.url, ".bare"])
             .assert_success();
-        std::fs::write(path.join(".git"), "gitdir: .bare\n").unwrap_or_else(|error| {
-            panic!(
-                "Could not create '{}': {error}",
-                path.join(".git").display()
-            )
-        });
+        let git_file = path.join(".git");
+        if let Err(error) = std::fs::write(&git_file, "gitdir: .bare\n") {
+            eprintln!("Could not create '{}': {error}", git_file.display());
+            std::process::exit(1);
+        };
         git.run([
             "config",
             "remote.origin.fetch",
@@ -51,20 +58,32 @@ impl RunCommand for CloneCommand {
 }
 
 impl CloneCommand {
-    fn get_clone_path(&self) -> PathBuf {
+    fn get_clone_path(&self) -> Result<PathBuf, String> {
+        if self.url.is_empty() {
+            return Err("Usage: clone <url> [path]".to_string());
+        }
+
         // use if configured
-        if let Some(p) = &self.path {
-            return p.clone();
+        if let Some(path) = &self.path {
+            if path.as_os_str().is_empty() {
+                return Err("Usage: clone <url> [path]".to_string());
+            }
+            return Ok(path.clone());
         }
 
         // derive from url
-        return self.url
+        self.url
             .rsplit('/')
             .next()
             .and_then(|name| name.strip_suffix(".git"))
+            .filter(|name| !name.is_empty())
             .map(PathBuf::from)
-            .expect(format!("Could not derive path from '{}'. Please pass a path explicitly. --help for detatils", &self.url).as_ref())
-            .into();
+            .ok_or_else(|| {
+                format!(
+                    "Could not derive path from '{}'. Please pass a path explicitly.",
+                    self.url
+                )
+            })
     }
 
     fn print_config_warnings(&self, git: &crate::git::Git) {
@@ -82,9 +101,9 @@ impl CloneCommand {
             eprintln!(
                 "WARNING! Git config doesn't know your user.email. You won't be able to commit unless you configure it."
             );
-            eprintln!("  Set globally:       $ git config --global user.email 'Your Name'");
+            eprintln!("  Set globally:       $ git config --global user.email 'email@example.com'");
             eprintln!(
-                "  For this repo only: $ cd '$path' && git config --local user.email 'Your Name'"
+                "  For this repo only: $ cd '$path' && git config --local user.email 'email@example.com'"
             );
         }
         eprintln!("\x1b[0m");
