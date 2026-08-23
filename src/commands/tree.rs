@@ -1,6 +1,6 @@
-use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::process::Stdio;
+
+use termtree::Tree;
 
 use crate::commands::{Cli, RunCommand};
 
@@ -28,30 +28,16 @@ impl RunCommand for TreeCommand {
             return;
         }
 
-        let mut tree_input = String::new();
-        let mut repo_count = 0;
+        let mut tree = Tree::new(".".to_string());
         let mut worktree_count = 0;
 
         for repo in &repos {
-            repo_count += 1;
-
-            let repo_display = if repo == Path::new(".") {
-                ".".to_string()
-            } else {
-                repo.display().to_string()
-            };
-            tree_input.push_str(&repo_display);
-            tree_input.push('\n');
+            let repo_components = Self::path_components(repo);
+            Self::add_path(&mut tree, repo_components.iter().cloned());
 
             if !show_worktrees {
                 continue;
             }
-
-            let prefix = if repo_display == "." {
-                String::new()
-            } else {
-                format!("{repo_display}/")
-            };
 
             let repo_path = cwd.join(repo);
             let repo_abs = std::fs::canonicalize(&repo_path).unwrap_or(repo_path.clone());
@@ -59,24 +45,35 @@ impl RunCommand for TreeCommand {
             let worktrees = Self::get_worktrees(&git);
 
             if worktrees.is_empty() {
-                tree_input.push_str(&format!("{prefix}(no worktrees)\n"));
+                Self::add_path(
+                    &mut tree,
+                    repo_components
+                        .iter()
+                        .cloned()
+                        .chain(std::iter::once("(no worktrees)".to_string())),
+                );
             } else {
-                for wt in &worktrees {
+                for worktree in &worktrees {
                     worktree_count += 1;
-                    let rel_wt = wt.strip_prefix(&repo_abs).unwrap_or(wt);
-                    let flat_wt = rel_wt.display().to_string().replace('/', "∕");
-                    tree_input.push_str(&format!("{prefix}{flat_wt}\n"));
+                    let relative_worktree = worktree.strip_prefix(&repo_abs).unwrap_or(worktree);
+                    let worktree_name = relative_worktree.display().to_string().replace('/', "∕");
+                    Self::add_path(
+                        &mut tree,
+                        repo_components
+                            .iter()
+                            .cloned()
+                            .chain(std::iter::once(worktree_name)),
+                    );
                 }
             }
         }
 
-        Self::print_tree(&tree_input);
-
+        eprint!("{tree}");
         eprintln!();
         if show_worktrees {
-            eprintln!("{repo_count} jgit repositories, {worktree_count} worktrees");
+            eprintln!("{} jgit repositories, {worktree_count} worktrees", repos.len());
         } else {
-            eprintln!("{repo_count} jgit repositories");
+            eprintln!("{} jgit repositories", repos.len());
         }
     }
 }
@@ -138,64 +135,28 @@ impl TreeCommand {
             .collect()
     }
 
-    fn print_tree(tree_input: &str) {
-        let mut child = match std::process::Command::new("tree")
-            .args(["--noreport", "--fromfile", "."])
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .spawn()
-        {
-            Ok(child) => child,
-            Err(error) => {
-                eprintln!("Could not execute 'tree': {error}");
-                std::process::exit(1);
-            }
-        };
-
-        let mut tree_stdout = match child.stdout.take() {
-            Some(stdout) => stdout,
-            None => {
-                eprintln!("Could not capture 'tree' output");
-                std::process::exit(1);
-            }
-        };
-        let output_thread =
-            std::thread::spawn(move || std::io::copy(&mut tree_stdout, &mut std::io::stderr()));
-
-        let mut stdin = match child.stdin.take() {
-            Some(stdin) => stdin,
-            None => {
-                eprintln!("Could not write to 'tree' stdin");
-                std::process::exit(1);
-            }
-        };
-        if let Err(error) = stdin.write_all(tree_input.as_bytes()) {
-            eprintln!("Could not write to 'tree' stdin: {error}");
-            std::process::exit(1);
-        }
-        drop(stdin);
-
-        let status = match child.wait() {
-            Ok(status) => status,
-            Err(error) => {
-                eprintln!("Could not wait for 'tree' to finish: {error}");
-                std::process::exit(1);
-            }
-        };
-        match output_thread.join() {
-            Ok(Ok(_)) => {}
-            Ok(Err(error)) => {
-                eprintln!("Could not write 'tree' output to stderr: {error}");
-                std::process::exit(1);
-            }
-            Err(_) => {
-                eprintln!("Could not forward 'tree' output to stderr");
-                std::process::exit(1);
-            }
+    fn path_components(path: &Path) -> Vec<String> {
+        if path == Path::new(".") {
+            return vec![];
         }
 
-        if !status.success() {
-            std::process::exit(status.code().unwrap_or(1));
+        path.components()
+            .map(|component| component.as_os_str().to_string_lossy().into_owned())
+            .collect()
+    }
+
+    fn add_path(tree: &mut Tree<String>, components: impl IntoIterator<Item = String>) {
+        let mut node = tree;
+        for component in components {
+            let child_index = node
+                .leaves
+                .iter()
+                .position(|child| child.root == component)
+                .unwrap_or_else(|| {
+                    node.leaves.push(Tree::new(component));
+                    node.leaves.len() - 1
+                });
+            node = &mut node.leaves[child_index];
         }
     }
 }
