@@ -1,0 +1,9 @@
+[package]
+name = "jgit"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.6.6", features = ["derive"] }
+clap_complete = { version = "4.6.9", features = ["unstable-dynamic"] }
+home = "0.5.12"
