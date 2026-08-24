@@ -68,12 +68,12 @@ impl RunCommand for TreeCommand {
             }
         }
 
-        eprint!("{tree}");
-        eprintln!();
+        print!("{tree}");
+        println!();
         if show_worktrees {
-            eprintln!("{} jgit repositories, {worktree_count} worktrees", repos.len());
+            println!("{} jgit repositories, {worktree_count} worktrees", repos.len());
         } else {
-            eprintln!("{} jgit repositories", repos.len());
+            println!("{} jgit repositories", repos.len());
         }
     }
 }
