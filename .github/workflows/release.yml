@@ -1,0 +1,83 @@
+#
+# To cut a release, complete the following steps:
+#
+# 1. https://github.com/just1ngray/jgit/releases
+# 2. Click create a new release
+# 3. Create a semver tag on the desired ref
+# 4. Choose "Pre-release"
+# 5. Click "Publish release"
+#
+# This pipeline will build the appropriate targets, update the release to
+# include the binaries, and mark it as published (non-pre-release).
+#
+
+run-name: "Building release ${{ github.ref }}"
+
+permissions:
+  contents: write
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  add-assets:
+    name: Add Assets
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        target:
+          - x86_64-unknown-linux-musl
+          - aarch64-unknown-linux-musl
+          - x86_64-apple-darwin
+          - aarch64-apple-darwin
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set version
+        run: sed -i 's/version = "0.0.0"/version = "${{ github.event.release.tag_name }}"/g' Cargo.toml
+
+      - name: Setup Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --release --target ${{ matrix.target }}
+
+      - name: Toolchain Rename
+        run: cp --preserve target/${{ matrix.target }}/release/jgit target/${{ matrix.target }}/release/jgit_${{ matrix.target }}
+
+      - name: Upload
+        uses: softprops/action-gh-release@v1
+        with:
+          files: target/${{ matrix.target }}/release/jgit_${{ matrix.target }}
+
+  mark-released:
+    needs: add-assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Release Information
+        id: release
+        run: echo "::set-output name=release_id::${{ github.event.release.id }}"
+
+      - name: Mark Pre-release as Released
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ID: ${{ steps.release.outputs.release_id }}
+        run: |
+          curl -X PATCH \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "Authorization: token $GITHUB_TOKEN" \
+          https://api.github.com/repos/${{ github.repository }}/releases/${{ env.RELEASE_ID }} \
+          -d '{"prerelease": false}'
