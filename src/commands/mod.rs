@@ -23,20 +23,24 @@ enum Commands {
     Autocomplete(autocomplete::AutocompleteCommand),
 }
 
+/// jgit is Justin's git wrapper to help manage multiple repositories each running
+/// one or more git-worktree's at the same time.
 #[derive(clap::Parser, Debug)]
-pub struct Cli {
+#[command(version, about)]
+pub struct JGitCli {
     #[command(subcommand)]
     command: Commands,
 
+    /// Override the default git executable path
     #[arg(long, value_hint = clap::ValueHint::ExecutablePath, default_value = "git")]
     pub git: String,
 }
 
 pub trait RunCommand {
-    fn run(&self, root: &Cli);
+    fn run(&self, root: &JGitCli);
 }
 
-impl Cli {
+impl JGitCli {
     pub fn run(&self) {
         match &self.command {
             Commands::Tree(cmd) => cmd.run(&self),

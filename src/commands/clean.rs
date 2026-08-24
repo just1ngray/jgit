@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::commands::{Cli, RunCommand};
+use crate::commands::{JGitCli, RunCommand};
 
 #[derive(Debug, clap::Args)]
 pub struct CleanCommand {
@@ -9,7 +9,7 @@ pub struct CleanCommand {
 }
 
 impl RunCommand for CleanCommand {
-    fn run(&self, root: &Cli) {
+    fn run(&self, root: &JGitCli) {
         let cwd = std::env::current_dir().expect("Could not determine current directory");
         if !cwd.join(".bare").exists() {
             eprintln!("This command must be executed from your top-level worktree repository");
@@ -32,7 +32,7 @@ impl RunCommand for CleanCommand {
 }
 
 impl CleanCommand {
-    fn clean_worktrees(&self, root: &Cli, cwd: &PathBuf, prompt: bool) {
+    fn clean_worktrees(&self, root: &JGitCli, cwd: &PathBuf, prompt: bool) {
         let git = crate::git::Git::new(root.git.clone(), cwd.clone());
         let remote_branches = Self::get_remote_branches(&git);
         let worktree_branches = Self::get_worktree_branches(&git);
@@ -107,7 +107,7 @@ impl CleanCommand {
         }
     }
 
-    fn clean_branches(&self, root: &Cli, cwd: &PathBuf, prompt: bool) {
+    fn clean_branches(&self, root: &JGitCli, cwd: &PathBuf, prompt: bool) {
         let git = crate::git::Git::new(root.git.clone(), cwd.clone());
         let local_branches = Self::get_local_branches(&git);
         let worktree_branches = Self::get_worktree_branches(&git);

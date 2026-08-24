@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::commands::{Cli, RunCommand};
+use crate::commands::{JGitCli, RunCommand};
 
 #[derive(Debug, clap::Args)]
 pub struct CloneCommand {
@@ -14,7 +14,7 @@ pub struct CloneCommand {
 }
 
 impl RunCommand for CloneCommand {
-    fn run(&self, root: &Cli) {
+    fn run(&self, root: &JGitCli) {
         let path = match self.get_clone_path() {
             Ok(path) => path,
             Err(error) => {

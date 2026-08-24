@@ -7,8 +7,8 @@ mod git;
 fn main() {
     // source-based in-place autocompletion evaluation
     // see crate::commands::autocomplete for more info
-    CompleteEnv::with_factory(commands::Cli::command).complete();
+    CompleteEnv::with_factory(commands::JGitCli::command).complete();
 
-    let cli = commands::Cli::parse();
+    let cli = commands::JGitCli::parse();
     cli.run();
 }

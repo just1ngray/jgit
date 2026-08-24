@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use crate::commands::{Cli, RunCommand};
+use crate::commands::{JGitCli, RunCommand};
 
 #[derive(Debug, clap::Subcommand)]
 enum Operations {
@@ -31,7 +31,7 @@ pub struct AutocompleteCommand {
 }
 
 impl RunCommand for AutocompleteCommand {
-    fn run(&self, _root: &Cli) {
+    fn run(&self, _root: &JGitCli) {
         let shell = self.shell.unwrap_or_else(|| Self::get_current_shell());
 
         match (&self.operation, shell) {

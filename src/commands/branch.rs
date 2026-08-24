@@ -1,4 +1,4 @@
-use crate::commands::{Cli, RunCommand};
+use crate::commands::{JGitCli, RunCommand};
 
 #[derive(Debug, clap::Args)]
 pub struct BranchCommand {
@@ -38,7 +38,7 @@ fn complete_branches(current: &std::ffi::OsStr) -> Vec<clap_complete::Completion
 }
 
 impl RunCommand for BranchCommand {
-    fn run(&self, root: &Cli) {
+    fn run(&self, root: &JGitCli) {
         let cwd = std::env::current_dir().expect("Could not determine current directory");
         if !cwd.join(".bare").exists() {
             eprintln!("This command must be executed from git repository");

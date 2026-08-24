@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use termtree::Tree;
 
-use crate::commands::{Cli, RunCommand};
+use crate::commands::{JGitCli, RunCommand};
 
 #[derive(Debug, clap::Args)]
 pub struct TreeCommand {
@@ -12,7 +12,7 @@ pub struct TreeCommand {
 }
 
 impl RunCommand for TreeCommand {
-    fn run(&self, root: &Cli) {
+    fn run(&self, root: &JGitCli) {
         let show_worktrees = !self.hide_branches;
         let cwd = match std::env::current_dir() {
             Ok(cwd) => cwd,
