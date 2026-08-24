@@ -4,6 +4,7 @@ use crate::commands::{JGitCli, RunCommand};
 
 #[derive(Debug, clap::Args)]
 pub struct CleanCommand {
+    /// Auto-confirm clean operations without any verification or approval step
     #[arg(short = 'y')]
     autoconfirm: bool,
 }
