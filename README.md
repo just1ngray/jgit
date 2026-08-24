@@ -1,85 +1,118 @@
 # jgit
 
+Justin's git wrapper to help manage repositories with worktrees mapping onto branches.
+
+## Install
+
+Grab an appropriate pre-compiled binary from [releases](https://github.com/just1ngray/jgit/releases).
+
+You can call it directly wherever it lives, and you're done! But it's easier if you 
+add it somewhere to your path so you can execute it like `jgit` without needing the
+fully resolved path to it (e.g., `~/Downloads/jgit_x86_64-unknown-linux-musl`).
+
+```shell
+$ echo $PATH
+... /home/justin/.local/bin /usr/local/sbin /usr/local/bin /usr/sbin /usr/bin /sbin /bin /usr/games /usr/local/games /snap/bin
+
+# choose an appropriate target
+$ cp ~/Downloads/jgit_x86_64-unknown-linux-musl ~/.local/bin
 ```
-JGit - Justin's simple git repository and worktree manager.
 
-    As developers we multi-task: a bugfix here, a PR review there, a couple of
-    features being developed in parallel. Stashing changes is a nightmare, and
-    sometimes your spahgetti code isn't quite ready to be committed.
+If a compatible binary isn't available or you want the latest non-released version:
 
-    Worktrees are an excellent tool for solving this problem. They are similar
-    to cloning the repository multiple times, but without the overhead since
-    they share the same git object store. This means that you can have multiple
-    branches checked out at the same time, and you can switch between them
-    simply by changing your directory.
+```
+git clone https://github.com/just1ngray/jgit.git
+cd jgit
+cargo build --release
+target/release/jgit --version
+```
 
-    In general, worktrees don't enforce many branch rules. With jgit we gently
-    enforce that each worktree tracks a remote branch, and that the worktree
-    checks out a branch whose name is the same as the path of the worktree,
-    relative to the root of the jgit-cloned repository.
+### Auto-complete
 
-    Note: this utility does not replace git, and still requires a fundamental
-          understanding of git and its basic commands.
+Once the binary is in-place, you can choose to add auto-completion for your shell.
 
-Usage: /home/justin/.local/bin/jgit {repo|branch|clean|tree|help} [args]
+```shell
+jgit autocomplete --help
+jgit autocomplete --shell fish generate
+jgit autocomplete --shell fish install
+```
 
-    repo <url> [path]
-        Create a jgit-supported worktree repository from a standard clone URL,
-        optionally saved to a particular path on disk.
-    branch <name> [from]
-        Create a new worktree for the given branch 'name'.
-        The 'from' argument is never needed, and is intended for advanced use:
-            If 'name' does not exist on remote, it will be created from the
-            'from' branch if 'from' exists. If 'from' is not provided, you will
-            be prompted to choose a 'from' branch (with the default being the
-            repo's default branch).
-    clean
-    clean yy
-        Delete local worktrees that do not have corresponding remote branches,
-        and deletes branches which are not checked out by any worktree. This
-        does not delete remote branches.
-        If 'yy' is provided, the command will proceed without prompting for
-        confirmation.
-    tree [-r[b]|-br]
-        Recursively finds and prints a tree of jgit worktree repositories in
-        the current directory. By default (or with -rb or -br), includes their
-        worktree branches. Use -r to list repositories only. -b is invalid on
-        its own because branches are shown only within a repository tree.
-    help
-        Prints this message.
+### Uninstall
 
-Typical usage:
+```shell
+# if you installed autocompletions, uninstall them for each relevant shell
+$ jgit autocomplete --shell xyz uninstall
 
-    1. Clone jgit repository to a directory
-        $ git clone https://github.com/just1ngray/jgit.git
-    2. Install jgit program to your system (optional - can be called directly
-        from the source directory)
-        $ cd jgit
-        $ ./install.sh
-    3. Create a new worktree repository (perhaps in the same directory as the
-        jgit source)
-        $ jgit repo https://github.com/leachim6/hello-world.git
-    4. Create a new worktree for a given branch
-        $ cd hello-world
-        $ jgit branch main
-    5. Clean up old worktrees whose branch no longer exists on remote (like
-        after you've merged a PR and deleted the remote branch)
-        $ jgit clean
-    6. See all your local jgit repos and their worktrees
-        $ jgit tree
-       List repositories without their worktrees
-        $ jgit tree -r
+# then, remove the binary itself
+$ rm $(command -v jgit)
+```
 
-Tip:
+## Main usage commands
 
-    If you want to open a new 'repo' or 'branch' in your editor, you can
-    capture the output from the command. E.g.,
-        $ code $(jgit repo https://github.com/just1ngray/jgit.git)
+These commands are enough to get up and running with jgit. Firstly, you need to
+clone a repository with jgit, and then you need to grab some branches. Once that's
+done it's easy to hop into each branch and start developing.
 
-To uninstall jgit:
+Read more about [git-worktree](https://git-scm.com/docs/git-worktree), but in short
+it allows you to checkout multiple branches in different directories efficiently.
+Open each branch in your preferred editor and run git commands on it directly. Some
+helpful commands are:
 
-    1. Run the uninstall script
-        $ ./uninstall.sh
-    2. Remove the jgit directory you are currently inside of
-        $ rm -rf ../jgit
+```shell
+git worktree list
+git worktree remove <worktree>
+```
+
+### clone
+
+Use `jgit clone` command to clone a git repository as a jgit-compatible worktree repo.
+
+```shell
+jgit clone https://github.com/just1ngray/jgit.git
+```
+
+### branch
+
+Use `jgit branch` inside any jgit repository folder to create a new worktree for a given
+branch name. In jgit, branches and worktrees map onto each other directly and share the
+same name. Raw git doesn't impose such restrictions and worktrees may serve any branch
+not already checked out in another worktree.
+
+```shell
+# create a worktree for the master branch
+$ jgit branch master
+
+# create a worktree for a new branch called feat-123
+$ jgit branch feat-123
+# ... to avoid prompting you can specify the source branch
+$ jgit branch feat-123 master
+```
+
+## Helper commands
+
+### tree
+
+Shows a tree of repositories and branches in a [tree](https://en.wikipedia.org/wiki/Tree_(command)) 
+structure. This is helpful for finding branches/worktrees within a jgit repository, as
+well as navigating your 'repos' folder wherever it's stored.
+
+```shell
+$ jgit tree
+
+# or, ignoring branches
+$ jgit tree -b
+```
+
+### clean
+
+Cleans up a jgit repository by doing two things:
+
+1. Deleting worktrees whose branches are no longer tracked remotely (e.g., merged)
+2. Removing branches from your local refs which are not checked out by any worktree
+
+By default you must confirm deletions but this can be bypassed with `-y` flag.
+
+```shell
+jgit clean
+jgit clean -y
 ```
