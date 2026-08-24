@@ -71,7 +71,10 @@ impl RunCommand for TreeCommand {
         print!("{tree}");
         println!();
         if show_worktrees {
-            println!("{} jgit repositories, {worktree_count} worktrees", repos.len());
+            println!(
+                "{} jgit repositories, {worktree_count} worktrees",
+                repos.len()
+            );
         } else {
             println!("{} jgit repositories", repos.len());
         }

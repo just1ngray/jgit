@@ -58,9 +58,7 @@ impl GitResult {
         if self.rc != 0 {
             eprintln!(
                 "Exiting {} after failed git command: {}\n{}",
-                self.rc,
-                self.command,
-                self.stderr,
+                self.rc, self.command, self.stderr,
             );
             std::process::exit(self.rc);
         }

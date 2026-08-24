@@ -61,7 +61,7 @@ impl AutocompleteCommand {
             other => {
                 eprintln!("Unsupported shell: {other}");
                 std::process::exit(1);
-            },
+            }
         };
     }
 
