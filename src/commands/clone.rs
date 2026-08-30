@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use colored::Colorize;
+
 use crate::commands::{JGitCli, RunCommand};
 
 #[derive(Debug, clap::Args)]
@@ -18,22 +20,32 @@ impl RunCommand for CloneCommand {
         let path = match self.get_clone_path() {
             Ok(path) => path,
             Err(error) => {
-                eprintln!("{error}");
+                eprintln!("{}", error.red());
                 std::process::exit(1);
             }
         };
         if path.exists() {
-            eprintln!("Path '{}' already exists", path.display());
+            eprintln!(
+                "{}",
+                format!("Path '{}' already exists", path.display()).red()
+            );
             std::process::exit(1);
         }
         let git = crate::git::Git::new(root.git.clone(), path.clone());
 
         eprintln!(
-            "Creating folder to hold jgit worktree repository at: {}",
-            path.display()
+            "{}",
+            format!(
+                "Creating folder to hold jgit worktree repository at: {}",
+                path.display()
+            )
+            .cyan()
         );
         if let Err(error) = std::fs::create_dir_all(&path) {
-            eprintln!("Could not create '{}': {error}", path.display());
+            eprintln!(
+                "{}",
+                format!("Could not create '{}': {error}", path.display()).red()
+            );
             std::process::exit(1);
         }
 
@@ -41,7 +53,10 @@ impl RunCommand for CloneCommand {
             .assert_success();
         let git_file = path.join(".git");
         if let Err(error) = std::fs::write(&git_file, "gitdir: .bare\n") {
-            eprintln!("Could not create '{}': {error}", git_file.display());
+            eprintln!(
+                "{}",
+                format!("Could not create '{}': {error}", git_file.display()).red()
+            );
             std::process::exit(1);
         };
         git.run([
@@ -87,25 +102,38 @@ impl CloneCommand {
     }
 
     fn print_config_warnings(&self, git: &crate::git::Git) {
-        eprintln!("\x1b[38;5;208m");
         if git.run(["config", "--get", "user.name"]).rc != 0 {
             eprintln!(
+                "{}",
                 "WARNING! Git config doesn't know your user.name. You won't be able to commit unless you configure it."
+                    .yellow()
             );
-            eprintln!("  Set globally:       $ git config --global user.name 'Your Name'");
             eprintln!(
+                "{}",
+                "  Set globally:       $ git config --global user.name 'Your Name'".yellow()
+            );
+            eprintln!(
+                "{}",
                 "  For this repo only: $ cd '$path' && git config --local user.name 'Your Name'"
+                    .yellow()
             );
         }
         if git.run(["config", "--get", "user.email"]).rc != 0 {
             eprintln!(
+                "{}",
                 "WARNING! Git config doesn't know your user.email. You won't be able to commit unless you configure it."
+                    .yellow()
             );
-            eprintln!("  Set globally:       $ git config --global user.email 'email@example.com'");
             eprintln!(
+                "{}",
+                "  Set globally:       $ git config --global user.email 'email@example.com'"
+                    .yellow()
+            );
+            eprintln!(
+                "{}",
                 "  For this repo only: $ cd '$path' && git config --local user.email 'email@example.com'"
+                    .yellow()
             );
         }
-        eprintln!("\x1b[0m");
     }
 }

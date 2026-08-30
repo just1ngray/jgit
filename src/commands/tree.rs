@@ -1,5 +1,6 @@
 use std::path::{Path, PathBuf};
 
+use colored::Colorize;
 use termtree::Tree;
 
 use crate::commands::{JGitCli, RunCommand};
@@ -17,14 +18,20 @@ impl RunCommand for TreeCommand {
         let cwd = match std::env::current_dir() {
             Ok(cwd) => cwd,
             Err(error) => {
-                eprintln!("Could not determine current directory: {error}");
+                eprintln!(
+                    "{}",
+                    format!("Could not determine current directory: {error}").red()
+                );
                 std::process::exit(1);
             }
         };
 
         let repos = Self::find_repos(&cwd);
         if repos.is_empty() {
-            eprintln!("No jgit repositories found in {}", cwd.display());
+            eprintln!(
+                "{}",
+                format!("No jgit repositories found in {}", cwd.display()).yellow()
+            );
             return;
         }
 
@@ -72,11 +79,15 @@ impl RunCommand for TreeCommand {
         println!();
         if show_worktrees {
             println!(
-                "{} jgit repositories, {worktree_count} worktrees",
-                repos.len()
+                "{}",
+                format!(
+                    "{} jgit repositories, {worktree_count} worktrees",
+                    repos.len()
+                )
+                .cyan()
             );
         } else {
-            println!("{} jgit repositories", repos.len());
+            println!("{}", format!("{} jgit repositories", repos.len()).cyan());
         }
     }
 }

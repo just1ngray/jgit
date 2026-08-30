@@ -1,3 +1,5 @@
+use colored::Colorize;
+
 use crate::commands::{JGitCli, RunCommand};
 
 #[derive(Debug, clap::Args)]
@@ -41,15 +43,22 @@ impl RunCommand for BranchCommand {
     fn run(&self, root: &JGitCli) {
         let cwd = std::env::current_dir().expect("Could not determine current directory");
         if !cwd.join(".bare").exists() {
-            eprintln!("This command must be executed from git repository");
+            eprintln!(
+                "{}",
+                "This command must be executed from git repository".red()
+            );
             std::process::exit(1);
         }
 
         let branch_path = cwd.join(&self.name);
         if branch_path.exists() {
             eprintln!(
-                "Branch '{}' already exists as a local worktree directory",
-                self.name
+                "{}",
+                format!(
+                    "Branch '{}' already exists as a local worktree directory",
+                    self.name
+                )
+                .red()
             );
             std::process::exit(1);
         }
@@ -78,7 +87,10 @@ impl RunCommand for BranchCommand {
                 .run(["reset", "--hard", &format!("origin/{}", self.name)])
                 .assert_success();
         } else {
-            eprintln!("Branch '{}' does not exist on remote", self.name);
+            eprintln!(
+                "{}",
+                format!("Branch '{}' does not exist on remote", self.name).yellow()
+            );
 
             let from_branch = self.get_from_branch(&git);
             if git
@@ -86,11 +98,17 @@ impl RunCommand for BranchCommand {
                 .rc
                 != 0
             {
-                eprintln!("Err: Branch '{}' does not exist on remote", from_branch);
+                eprintln!(
+                    "{}",
+                    format!("Err: Branch '{}' does not exist on remote", from_branch).red()
+                );
                 std::process::exit(1);
             }
 
-            eprintln!("Creating branch '{}' from '{}'", self.name, from_branch);
+            eprintln!(
+                "{}",
+                format!("Creating branch '{}' from '{}'", self.name, from_branch).cyan()
+            );
             git.run(["fetch", "origin", &from_branch]).assert_success();
             git.run([
                 "worktree",
@@ -131,7 +149,10 @@ impl BranchCommand {
     fn get_main_branch(&self, git: &crate::git::Git) -> String {
         let head = git.run(["symbolic-ref", "HEAD"]);
         if head.rc != 0 {
-            eprintln!("Could not determine current branch: {}", head.stderr);
+            eprintln!(
+                "{}",
+                format!("Could not determine current branch: {}", head.stderr).red()
+            );
             std::process::exit(head.rc);
         }
 
@@ -145,8 +166,12 @@ impl BranchCommand {
     fn get_branch_interactive(&self, default_branch: &str) -> String {
         use std::io::Write;
         eprint!(
-            "Create branch '{}' from which branch? ({}): ",
-            self.name, default_branch
+            "{}",
+            format!(
+                "Create branch '{}' from which branch? ({}): ",
+                self.name, default_branch
+            )
+            .cyan()
         );
         std::io::stderr().flush().ok();
 

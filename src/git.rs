@@ -1,3 +1,5 @@
+use colored::Colorize;
+
 pub struct Git {
     exec: String,
     cwd: std::path::PathBuf,
@@ -10,12 +12,12 @@ impl Git {
 
     pub fn run<const N: usize>(&self, args: [&str; N]) -> GitResult {
         let command = format!(
-            "{} $ {} {}",
+            "{}$ {} {}",
             self.cwd.to_string_lossy(),
             self.exec,
             args.join(" ")
         );
-        eprintln!("{command}");
+        eprintln!("{}", command.dimmed());
         let res = std::process::Command::new(&self.exec)
             .args(args)
             .current_dir(&self.cwd)
@@ -23,7 +25,10 @@ impl Git {
 
         // raise an error if there's a problem with the executable itself
         if let Err(error) = res {
-            eprintln!("Could not execute '{}': {}", self.exec, error);
+            eprintln!(
+                "{}",
+                format!("Could not execute '{}': {}", self.exec, error).red()
+            );
             std::process::exit(1);
         }
         let output = res.unwrap();
@@ -57,8 +62,12 @@ impl GitResult {
     pub fn assert_success(self) {
         if self.rc != 0 {
             eprintln!(
-                "Exiting {} after failed git command: {}\n{}",
-                self.rc, self.command, self.stderr,
+                "{}",
+                format!(
+                    "Exiting {} after failed git command: {}\n{}",
+                    self.rc, self.command, self.stderr,
+                )
+                .red()
             );
             std::process::exit(self.rc);
         }

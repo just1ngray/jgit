@@ -1,5 +1,7 @@
 use std::io::Write;
 
+use colored::Colorize;
+
 use crate::commands::{JGitCli, RunCommand};
 
 #[derive(Debug, clap::Subcommand)]
@@ -59,7 +61,7 @@ impl AutocompleteCommand {
             "fish" => Shell::Fish,
             "zsh" => Shell::Zsh,
             other => {
-                eprintln!("Unsupported shell: {other}");
+                eprintln!("{}", format!("Unsupported shell: {other}").red());
                 std::process::exit(1);
             }
         };
@@ -72,18 +74,21 @@ impl AutocompleteCommand {
 
         if let Some(parent) = path.parent() {
             if let Err(error) = std::fs::create_dir_all(parent) {
-                eprintln!("{}", error);
+                eprintln!("{}", error.to_string().red());
                 std::process::exit(1);
             }
         }
 
         match std::fs::write(&path, FISH) {
             Ok(_) => {
-                eprintln!("Added jgit install to {}", &path.display());
-                eprintln!("Run 'source {}' now", &path.display());
+                eprintln!(
+                    "{}",
+                    format!("Added jgit install to {}", &path.display()).green()
+                );
+                eprintln!("{}", format!("Run 'source {}' now", &path.display()).cyan());
             }
             Err(error) => {
-                eprintln!("{}", error);
+                eprintln!("{}", error.to_string().red());
                 std::process::exit(1);
             }
         };
@@ -96,14 +101,17 @@ impl AutocompleteCommand {
 
         if let Ok(file_content) = std::fs::read_to_string(&path) {
             if file_content.contains(content) {
-                eprintln!("Already installed in {}", &path.display());
+                eprintln!(
+                    "{}",
+                    format!("Already installed in {}", &path.display()).green()
+                );
                 return;
             }
         }
 
         if let Some(parent) = path.parent() {
             if let Err(error) = std::fs::create_dir_all(parent) {
-                eprintln!("{}", error);
+                eprintln!("{}", error.to_string().red());
                 std::process::exit(1);
             }
         }
@@ -116,11 +124,14 @@ impl AutocompleteCommand {
 
         match writeln!(file, "{}", content) {
             Ok(_) => {
-                eprintln!("Added jgit install to {}", &path.display());
-                eprintln!("Run 'source {}' now", &path.display());
+                eprintln!(
+                    "{}",
+                    format!("Added jgit install to {}", &path.display()).green()
+                );
+                eprintln!("{}", format!("Run 'source {}' now", &path.display()).cyan());
             }
             Err(error) => {
-                eprintln!("{}", error);
+                eprintln!("{}", error.to_string().red());
                 std::process::exit(1);
             }
         };
@@ -134,17 +145,24 @@ impl AutocompleteCommand {
         if path.exists() {
             match std::fs::remove_file(&path) {
                 Ok(_) => {
-                    eprintln!("Uninstalled jgit from {}", &path.display());
+                    eprintln!(
+                        "{}",
+                        format!("Uninstalled jgit from {}", &path.display()).green()
+                    );
                 }
                 Err(error) => {
-                    eprintln!("{}", error);
+                    eprintln!("{}", error.to_string().red());
                     std::process::exit(1);
                 }
             };
         } else {
             eprintln!(
-                "Already uninstalled from {} (does not exist)",
-                &path.display()
+                "{}",
+                format!(
+                    "Already uninstalled from {} (does not exist)",
+                    &path.display()
+                )
+                .green()
             );
         }
     }
@@ -159,21 +177,31 @@ impl AutocompleteCommand {
             if new != file_content {
                 match std::fs::write(&path, new) {
                     Ok(_) => {
-                        eprintln!("Uninstalled jgit from {}", &path.display());
+                        eprintln!(
+                            "{}",
+                            format!("Uninstalled jgit from {}", &path.display()).green()
+                        );
                     }
                     Err(error) => {
-                        eprintln!("{}", error);
+                        eprintln!("{}", error.to_string().red());
                         eprintln!();
                         std::process::exit(1);
                     }
                 };
             } else {
-                eprintln!("Already uninstalled from {}", &path.display());
+                eprintln!(
+                    "{}",
+                    format!("Already uninstalled from {}", &path.display()).green()
+                );
             }
         } else {
             eprintln!(
-                "Already uninstalled from {} (does not exist)",
-                &path.display()
+                "{}",
+                format!(
+                    "Already uninstalled from {} (does not exist)",
+                    &path.display()
+                )
+                .green()
             );
         }
     }

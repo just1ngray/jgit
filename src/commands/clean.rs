@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use colored::Colorize;
+
 use crate::commands::{JGitCli, RunCommand};
 
 #[derive(Debug, clap::Args)]
@@ -13,7 +15,10 @@ impl RunCommand for CleanCommand {
     fn run(&self, root: &JGitCli) {
         let cwd = std::env::current_dir().expect("Could not determine current directory");
         if !cwd.join(".bare").exists() {
-            eprintln!("This command must be executed from your top-level worktree repository");
+            eprintln!(
+                "{}",
+                "This command must be executed from your top-level worktree repository".red()
+            );
             std::process::exit(1);
         }
 
@@ -23,7 +28,9 @@ impl RunCommand for CleanCommand {
         let prompt = !self.autoconfirm;
         if !prompt {
             eprintln!(
+                "{}",
                 "!! Proceeding to clean worktrees and branches without prompting for confirmation"
+                    .yellow()
             );
         }
 
@@ -44,17 +51,20 @@ impl CleanCommand {
             .collect();
 
         if remove.is_empty() {
-            eprintln!("No worktrees to delete. Every worktree branch exists on remote");
+            eprintln!(
+                "{}",
+                "No worktrees to delete. Every worktree branch exists on remote".green()
+            );
             return;
         }
 
-        eprintln!("\nWORKTREES TO DELETE");
+        eprintln!("\n{}", "WORKTREES TO DELETE".yellow().bold());
         for branch in &remove {
-            eprintln!("    {branch}");
+            eprintln!("    {}", branch.yellow());
         }
 
         if prompt && !Self::confirm("Proceed? y/(n): ") {
-            eprintln!("Cancelling worktree removal");
+            eprintln!("{}", "Cancelling worktree removal".red());
             return;
         }
 
@@ -64,12 +74,16 @@ impl CleanCommand {
             let branch_git = crate::git::Git::new(root.git.clone(), branch_path.clone());
             let status = branch_git.run(["status", "--porcelain"]);
             if !status.stdout.trim().is_empty() {
-                eprintln!("  -> Skipping: '{branch}' contains untracked or modified files.");
+                eprintln!(
+                    "{}",
+                    format!("  -> Skipping: '{branch}' contains untracked or modified files.")
+                        .yellow()
+                );
                 must_force.push(branch.clone());
                 continue;
             }
 
-            eprintln!("Removing worktree {branch}");
+            eprintln!("{}", format!("Removing worktree {branch}").cyan());
             // remove with --force. we know there are no untracked files, so --force
             // removal to resolve any issues with git-submodules in the worktree
             git.run(["worktree", "remove", branch.as_str(), "--force"])
@@ -84,7 +98,10 @@ impl CleanCommand {
                     if std::fs::remove_dir(&dir).is_err() {
                         break;
                     }
-                    eprintln!("Deleted empty directory {}", dir.display());
+                    eprintln!(
+                        "{}",
+                        format!("Deleted empty directory {}", dir.display()).cyan()
+                    );
                     match dir.parent() {
                         Some(p) => dir = p.to_path_buf(),
                         None => break,
@@ -93,16 +110,22 @@ impl CleanCommand {
             }
         }
 
-        eprintln!("\n---------------------");
+        eprintln!("\n{}", "---------------------".dimmed());
 
         if !must_force.is_empty() {
-            eprintln!("\nUntracked files. Inspect, and possibly remove with --force:");
+            eprintln!(
+                "\n{}",
+                "Untracked files. Inspect, and possibly remove with --force:".yellow()
+            );
             for branch in &must_force {
-                eprintln!("    git worktree remove '{branch}' --force");
+                eprintln!(
+                    "{}",
+                    format!("    git worktree remove '{branch}' --force").yellow()
+                );
             }
         }
 
-        eprintln!("\nREMAINING WORKTREES:");
+        eprintln!("\n{}", "REMAINING WORKTREES:".green().bold());
         for line in git.run(["worktree", "list"]).stdout.lines() {
             eprintln!("    {line}");
         }
@@ -119,17 +142,20 @@ impl CleanCommand {
             .collect();
 
         if remove.is_empty() {
-            eprintln!("No branches to delete. Every branch is checked out on a worktree");
+            eprintln!(
+                "{}",
+                "No branches to delete. Every branch is checked out on a worktree".green()
+            );
             return;
         }
 
-        eprintln!("\nBRANCHES TO DELETE");
+        eprintln!("\n{}", "BRANCHES TO DELETE".yellow().bold());
         for branch in &remove {
-            eprintln!("    {branch}");
+            eprintln!("    {}", branch.yellow());
         }
 
         if prompt && !Self::confirm("Proceed? y/(n): ") {
-            eprintln!("Cancelling branch removal");
+            eprintln!("{}", "Cancelling branch removal".red());
             return;
         }
 
@@ -137,7 +163,7 @@ impl CleanCommand {
             git.run(["branch", "-D", branch.as_str()]).assert_success();
         }
 
-        eprintln!("\nREMAINING BRANCHES:");
+        eprintln!("\n{}", "REMAINING BRANCHES:".green().bold());
         for line in git.run(["branch"]).stdout.lines() {
             eprintln!("    {line}");
         }
@@ -184,7 +210,7 @@ impl CleanCommand {
 
     fn confirm(message: &str) -> bool {
         use std::io::Write;
-        eprint!("{message}");
+        eprint!("{}", message.cyan());
         std::io::stderr().flush().ok();
 
         let mut input = String::new();
